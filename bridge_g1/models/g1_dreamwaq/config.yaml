@@ -83,6 +83,12 @@ algorithm:
   # Command scaling [x, y, yaw]
   commands_scale: [2.0, 2.0, 1.0]
   joystick_scale: [0.6, 0.4, 1.0]
+  
+  # DreamWAQ-specific parameters
+  gait_cycle_time: 0.8       # seconds (one full gait cycle)
+  sw_switch: true            # Enable stand-walk switch
+  sw_lin_cmd_thresh: 0.2     # Linear command norm threshold (scaled)
+  sw_yaw_cmd_thresh: 0.2     # Yaw command threshold (scaled)
 
 control:
   # Transition times
