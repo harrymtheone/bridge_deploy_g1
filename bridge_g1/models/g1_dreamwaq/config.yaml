@@ -95,7 +95,7 @@ control:
   stand_up_time: 2.5
   sit_down_time: 2.5
 
-  # RL gains for active joints (legs + waist = 15 DOFs)
+  # RL gains for all joints (29 DOFs) - used in RL_RUNNING mode
   rl_kp:
     # Left leg
     leg_l1_joint: 40.18
@@ -115,6 +115,22 @@ control:
     waist_yaw_joint: 40.18
     waist_roll_joint: 28.50
     waist_pitch_joint: 28.50
+    # Left arm
+    arm_l1_joint: 14.25
+    arm_l2_joint: 14.25
+    arm_l3_joint: 14.25
+    arm_l4_joint: 14.25
+    arm_l5_joint: 14.25
+    arm_l6_joint: 16.78
+    arm_l7_joint: 16.78
+    # Right arm
+    arm_r1_joint: 14.25
+    arm_r2_joint: 14.25
+    arm_r3_joint: 14.25
+    arm_r4_joint: 14.25
+    arm_r5_joint: 14.25
+    arm_r6_joint: 16.78
+    arm_r7_joint: 16.78
   rl_kd:
     # Left leg
     leg_l1_joint: 2.558
@@ -134,6 +150,22 @@ control:
     waist_yaw_joint: 2.558
     waist_roll_joint: 1.814
     waist_pitch_joint: 1.814
+    # Left arm
+    arm_l1_joint: 0.907
+    arm_l2_joint: 0.907
+    arm_l3_joint: 0.907
+    arm_l4_joint: 0.907
+    arm_l5_joint: 0.907
+    arm_l6_joint: 1.068
+    arm_l7_joint: 1.068
+    # Right arm
+    arm_r1_joint: 0.907
+    arm_r2_joint: 0.907
+    arm_r3_joint: 0.907
+    arm_r4_joint: 0.907
+    arm_r5_joint: 0.907
+    arm_r6_joint: 1.068
+    arm_r7_joint: 1.068
   
   # Fixed gains for all joints (29 DOFs)
   fixed_kp:
