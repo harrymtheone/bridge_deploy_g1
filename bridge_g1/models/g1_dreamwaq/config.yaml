@@ -1,0 +1,240 @@
+# Unitree G1 Robot Configuration for DreamWAQ Algorithm
+
+robot:
+  type: "G1"
+  num_dof: 29
+
+  joint_names:
+    # Left leg (6)
+    - "leg_l1_joint"
+    - "leg_l2_joint"
+    - "leg_l3_joint"
+    - "leg_l4_joint"
+    - "leg_l5_joint"
+    - "leg_l6_joint"
+    # Right leg (6)
+    - "leg_r1_joint"
+    - "leg_r2_joint"
+    - "leg_r3_joint"
+    - "leg_r4_joint"
+    - "leg_r5_joint"
+    - "leg_r6_joint"
+    # Waist (3)
+    - "waist_yaw_joint"
+    - "waist_roll_joint"
+    - "waist_pitch_joint"
+    # Left arm (7)
+    - "arm_l1_joint"
+    - "arm_l2_joint"
+    - "arm_l3_joint"
+    - "arm_l4_joint"
+    - "arm_l5_joint"
+    - "arm_l6_joint"
+    - "arm_l7_joint"
+    # Right arm (7)
+    - "arm_r1_joint"
+    - "arm_r2_joint"
+    - "arm_r3_joint"
+    - "arm_r4_joint"
+    - "arm_r5_joint"
+    - "arm_r6_joint"
+    - "arm_r7_joint"
+  dof_activated:
+    # Left leg (6)
+    - "leg_l1_joint"
+    - "leg_l2_joint"
+    - "leg_l3_joint"
+    - "leg_l4_joint"
+    - "leg_l5_joint"
+    - "leg_l6_joint"
+    # Right leg (6)
+    - "leg_r1_joint"
+    - "leg_r2_joint"
+    - "leg_r3_joint"
+    - "leg_r4_joint"
+    - "leg_r5_joint"
+    - "leg_r6_joint"
+    # Waist (3)
+    - "waist_yaw_joint"
+    - "waist_roll_joint"
+    - "waist_pitch_joint"
+
+algorithm:
+  name: "DreamWAQ"
+  # Model file: exported from training with trace_dreamwaq.py
+  # Input: proprio (1, 56), prop_his (1, 100, 56)
+  # Output: actions (1, 15), recon (1, 32, 16)
+  model_name: "g1_dream_006_1800.onnx"  # TODO: Replace with actual model file
+  dt: 0.004           # Base timestep (matches training env dt)
+  decimation: 5       # Policy runs at dt * decimation = 0.02s (50Hz)
+  
+  # Scaling factors (match training config)
+  action_scale: 0.5
+  lin_vel_scale: 2.0
+  ang_vel_scale: 1.0
+  dof_pos_scale: 1.0
+  dof_vel_scale: 0.05
+  clip_obs: 100.0
+  
+  # Action limits
+  clip_actions_lower: -100.0
+  clip_actions_upper: 100.0
+  
+  # Command scaling [x, y, yaw]
+  commands_scale: [2.0, 2.0, 1.0]
+  joystick_scale: [0.6, 0.4, 1.0]
+
+control:
+  # Transition times
+  stand_up_time: 2.5
+  sit_down_time: 2.5
+
+  # RL gains for active joints (legs + waist = 15 DOFs)
+  rl_kp:
+    # Left leg
+    leg_l1_joint: 40.18
+    leg_l2_joint: 99.11
+    leg_l3_joint: 40.18
+    leg_l4_joint: 99.11
+    leg_l5_joint: 28.50
+    leg_l6_joint: 28.50
+    # Right leg
+    leg_r1_joint: 40.18
+    leg_r2_joint: 99.11
+    leg_r3_joint: 40.18
+    leg_r4_joint: 99.11
+    leg_r5_joint: 28.50
+    leg_r6_joint: 28.50
+    # Waist
+    waist_yaw_joint: 40.18
+    waist_roll_joint: 28.50
+    waist_pitch_joint: 28.50
+  rl_kd:
+    # Left leg
+    leg_l1_joint: 2.558
+    leg_l2_joint: 6.309
+    leg_l3_joint: 2.558
+    leg_l4_joint: 6.309
+    leg_l5_joint: 1.814
+    leg_l6_joint: 1.814
+    # Right leg
+    leg_r1_joint: 2.558
+    leg_r2_joint: 6.309
+    leg_r3_joint: 2.558
+    leg_r4_joint: 6.309
+    leg_r5_joint: 1.814
+    leg_r6_joint: 1.814
+    # Waist
+    waist_yaw_joint: 2.558
+    waist_roll_joint: 1.814
+    waist_pitch_joint: 1.814
+  
+  # Fixed gains for all joints (29 DOFs)
+  fixed_kp:
+    # Left leg
+    leg_l1_joint: 40.18
+    leg_l2_joint: 99.11
+    leg_l3_joint: 40.18
+    leg_l4_joint: 99.11
+    leg_l5_joint: 28.50
+    leg_l6_joint: 28.50
+    # Right leg
+    leg_r1_joint: 40.18
+    leg_r2_joint: 99.11
+    leg_r3_joint: 40.18
+    leg_r4_joint: 99.11
+    leg_r5_joint: 28.50
+    leg_r6_joint: 28.50
+    # Waist
+    waist_yaw_joint: 40.18
+    waist_roll_joint: 28.50
+    waist_pitch_joint: 28.50
+    # Left arm
+    arm_l1_joint: 14.25
+    arm_l2_joint: 14.25
+    arm_l3_joint: 14.25
+    arm_l4_joint: 14.25
+    arm_l5_joint: 14.25
+    arm_l6_joint: 16.78
+    arm_l7_joint: 16.78
+    # Right arm
+    arm_r1_joint: 14.25
+    arm_r2_joint: 14.25
+    arm_r3_joint: 14.25
+    arm_r4_joint: 14.25
+    arm_r5_joint: 14.25
+    arm_r6_joint: 16.78
+    arm_r7_joint: 16.78
+  fixed_kd:
+    # Left leg
+    leg_l1_joint: 2.558
+    leg_l2_joint: 6.309
+    leg_l3_joint: 2.558
+    leg_l4_joint: 6.309
+    leg_l5_joint: 1.814
+    leg_l6_joint: 1.814
+    # Right leg
+    leg_r1_joint: 2.558
+    leg_r2_joint: 6.309
+    leg_r3_joint: 2.558
+    leg_r4_joint: 6.309
+    leg_r5_joint: 1.814
+    leg_r6_joint: 1.814
+    # Waist
+    waist_yaw_joint: 2.558
+    waist_roll_joint: 1.814
+    waist_pitch_joint: 1.814
+    # Left arm
+    arm_l1_joint: 0.907
+    arm_l2_joint: 0.907
+    arm_l3_joint: 0.907
+    arm_l4_joint: 0.907
+    arm_l5_joint: 0.907
+    arm_l6_joint: 1.068
+    arm_l7_joint: 1.068
+    # Right arm
+    arm_r1_joint: 0.907
+    arm_r2_joint: 0.907
+    arm_r3_joint: 0.907
+    arm_r4_joint: 0.907
+    arm_r5_joint: 0.907
+    arm_r6_joint: 1.068
+    arm_r7_joint: 1.068
+  
+  # Default standing pose (29 DOFs)
+  # Matches init_state_dof_pos from training environment
+  default_dof_pos:
+    # Left leg
+    leg_l1_joint: -0.312  # hip_pitch
+    leg_l2_joint: 0.0     # hip_roll
+    leg_l3_joint: 0.0     # hip_yaw
+    leg_l4_joint: 0.669   # knee
+    leg_l5_joint: -0.363  # ankle_pitch
+    leg_l6_joint: 0.0     # ankle_roll
+    # Right leg
+    leg_r1_joint: -0.312
+    leg_r2_joint: 0.0
+    leg_r3_joint: 0.0
+    leg_r4_joint: 0.669
+    leg_r5_joint: -0.363
+    leg_r6_joint: 0.0
+    # Waist
+    waist_yaw_joint: 0.0
+    waist_roll_joint: 0.0
+    waist_pitch_joint: 0.0
+    # Left arm
+    arm_l1_joint: 0.2   # shoulder_pitch
+    arm_l2_joint: 0.2   # shoulder_roll
+    arm_l3_joint: 0.0   # shoulder_yaw
+    arm_l4_joint: 0.6   # elbow
+    arm_l5_joint: 0.0   # wrist
+    arm_l6_joint: 0.0
+    arm_l7_joint: 0.0
+    # Right arm
+    arm_r1_joint: 0.2
+    arm_r2_joint: -0.2
+    arm_r3_joint: 0.0
+    arm_r4_joint: 0.6
+    arm_r5_joint: 0.0
+    arm_r6_joint: 0.0
+    arm_r7_joint: 0.0
