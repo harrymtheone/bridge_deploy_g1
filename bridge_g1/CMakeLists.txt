@@ -16,6 +16,11 @@ find_package(std_srvs REQUIRED)
 find_package(bridge_core REQUIRED)
 find_package(mujoco_ros_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+# find_package(unitree_sdk2 REQUIRED)
+
+# Add Unitree SDK2 directly
+add_subdirectory(sdk)
+
 
 # Create G1 MuJoCo node
 add_executable(g1_mujoco_node
@@ -37,8 +42,31 @@ ament_target_dependencies(g1_mujoco_node
     ament_index_cpp
 )
 
+# Create G1 Real Robot node
+add_executable(g1_real_node
+    src/g1_real_node.cpp
+)
+
+target_include_directories(g1_real_node PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+ament_target_dependencies(g1_real_node
+    rclcpp
+    std_msgs
+    sensor_msgs
+    nav_msgs
+    std_srvs
+    bridge_core
+    ament_index_cpp
+)
+
+target_link_libraries(g1_real_node
+    unitree_sdk2
+)
+
 # Install executable
-install(TARGETS g1_mujoco_node
+install(TARGETS g1_mujoco_node g1_real_node
     DESTINATION lib/${PROJECT_NAME}
 )
 
