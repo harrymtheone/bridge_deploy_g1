@@ -11,8 +11,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(bridge_core REQUIRED)
 find_package(mujoco_ros_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
@@ -55,8 +57,10 @@ ament_target_dependencies(g1_real_node
     rclcpp
     std_msgs
     sensor_msgs
+    geometry_msgs
     nav_msgs
     std_srvs
+    tf2_ros
     bridge_core
     ament_index_cpp
 )

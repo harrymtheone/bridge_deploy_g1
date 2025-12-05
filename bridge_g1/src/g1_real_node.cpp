@@ -9,6 +9,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include <bridge_core/core/types.hpp>
 #include <bridge_core/core/config_manager.hpp>
@@ -260,6 +262,9 @@ public:
         // Create ROS joint state publisher for RViz visualization
         joint_state_pub_ = node_->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 
+        // Create TF broadcaster for base_link orientation
+        tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
+
         // Initialize Motion Switcher to release high-level control
         msc_ = std::make_shared<unitree::robot::b2::MotionSwitcherClient>();
         msc_->SetTimeout(5.0f);
@@ -357,6 +362,9 @@ public:
             state.imu.gyroscope = imu_ptr->omega;
             state.imu.accelerometer = imu_ptr->acc;
             state.imu.euler = imu_ptr->rpy;
+
+            // Publish TF: world -> base_link (rotation only)
+            publishBaseLinkTF(*imu_ptr);
         }
 
         return state;
@@ -436,6 +444,9 @@ private:
 
     // ROS publisher for joint states (RViz visualization)
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
+
+    // TF broadcaster for base_link orientation
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     DataBuffer<UnitreeMotorState> motor_state_buffer_;
     DataBuffer<UnitreeMotorCommand> motor_command_buffer_;
@@ -534,6 +545,27 @@ private:
         }
 
         joint_state_pub_->publish(joint_state_msg);
+    }
+
+    void publishBaseLinkTF(const UnitreeImuState &imu)
+    {
+        geometry_msgs::msg::TransformStamped transform;
+        transform.header.stamp = node_->now();
+        transform.header.frame_id = "world";
+        transform.child_frame_id = "base_link";
+
+        // No translation (rotation only)
+        transform.transform.translation.x = 0.0;
+        transform.transform.translation.y = 0.0;
+        transform.transform.translation.z = 0.0;
+
+        // IMU quaternion: [w, x, y, z]
+        transform.transform.rotation.w = imu.quat[0];
+        transform.transform.rotation.x = imu.quat[1];
+        transform.transform.rotation.y = imu.quat[2];
+        transform.transform.rotation.z = imu.quat[3];
+
+        tf_broadcaster_->sendTransform(transform);
     }
 };
 
