@@ -26,7 +26,6 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <thread>
 #include <unordered_map>
 
 // Unitree SDK headers
@@ -265,6 +264,11 @@ public:
         // Create TF broadcaster for base_link orientation
         tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
 
+        // Create visualization publisher timer (50Hz for RViz)
+        viz_timer_ = node_->create_wall_timer(
+            std::chrono::milliseconds(20),
+            std::bind(&G1RealInterface::vizPublisherCallback, this));
+
         // Initialize Motion Switcher to release high-level control
         msc_ = std::make_shared<unitree::robot::b2::MotionSwitcherClient>();
         msc_->SetTimeout(5.0f);
@@ -273,8 +277,10 @@ public:
 
     ~G1RealInterface() override
     {
-        // Stop threads if needed? They are smart pointers, but maybe need join?
-        // Unitree threads detach or manage themselves usually.
+        // Cancel visualization timer
+        if (viz_timer_) {
+            viz_timer_->cancel();
+        }
     }
 
     void initialize(const RobotConfig &config) override
@@ -351,9 +357,6 @@ public:
                     state.motor.tau_est[cfg_idx] = ms_ptr->tau_est[sdk_idx];
                 }
             }
-
-            // Publish joint states for RViz visualization
-            publishJointStates(*ms_ptr);
         }
 
         if (imu_ptr)
@@ -362,9 +365,6 @@ public:
             state.imu.gyroscope = imu_ptr->omega;
             state.imu.accelerometer = imu_ptr->acc;
             state.imu.euler = imu_ptr->rpy;
-
-            // Publish TF: world -> base_link (rotation only)
-            publishBaseLinkTF(*imu_ptr);
         }
 
         return state;
@@ -442,6 +442,9 @@ private:
 
     // TF broadcaster for base_link orientation
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+
+    // Visualization publisher timer (50Hz for RViz)
+    rclcpp::TimerBase::SharedPtr viz_timer_;
 
     DataBuffer<UnitreeMotorState> motor_state_buffer_;
     DataBuffer<UnitreeMotorCommand> motor_command_buffer_;
@@ -561,6 +564,25 @@ private:
         transform.transform.rotation.z = imu.quat[3];
 
         tf_broadcaster_->sendTransform(transform);
+    }
+
+    void vizPublisherCallback()
+    {
+        // Get latest data from buffers
+        auto ms_ptr = motor_state_buffer_.GetData();
+        auto imu_ptr = imu_state_buffer_.GetData();
+        
+        // Publish joint states
+        if (ms_ptr)
+        {
+            publishJointStates(*ms_ptr);
+        }
+        
+        // Publish TF
+        if (imu_ptr)
+        {
+            publishBaseLinkTF(*imu_ptr);
+        }
     }
 };
 
