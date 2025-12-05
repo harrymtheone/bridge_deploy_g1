@@ -324,6 +324,7 @@ public:
     {
         RobotState state;
         state.resize(config_.joint_names.size());
+        state.motor.names = config_.joint_names;
 
         auto ms_ptr = motor_state_buffer_.GetData();
         auto imu_ptr = imu_state_buffer_.GetData();
@@ -359,32 +360,36 @@ public:
         UnitreeMotorCommand mc;
 
         // Convert bridge_core::RobotCommand to internal UnitreeMotorCommand
-        // Using Config -> SDK mapping for proper joint ordering
-        for (size_t cfg_idx = 0; cfg_idx < config_to_sdk_.size(); ++cfg_idx)
+        // Using command.motor.names to map to SDK order
+        for (size_t i = 0; i < command.motor.names.size(); ++i)
         {
-            int sdk_idx = config_to_sdk_[cfg_idx];
-            if (sdk_idx >= 0 && sdk_idx < G1_NUM_MOTOR)
+            const std::string &joint_name = command.motor.names[i];
+            auto it = JOINT_NAME_TO_SDK_INDEX.find(joint_name);
+            if (it == JOINT_NAME_TO_SDK_INDEX.end())
             {
-                if (cfg_idx < command.motor.q.size())
-                {
-                    mc.q_target[sdk_idx] = command.motor.q[cfg_idx];
-                }
-                if (cfg_idx < command.motor.dq.size())
-                {
-                    mc.dq_target[sdk_idx] = command.motor.dq[cfg_idx];
-                }
-                if (cfg_idx < command.motor.kp.size())
-                {
-                    mc.kp[sdk_idx] = command.motor.kp[cfg_idx];
-                }
-                if (cfg_idx < command.motor.kd.size())
-                {
-                    mc.kd[sdk_idx] = command.motor.kd[cfg_idx];
-                }
-                if (cfg_idx < command.motor.tau.size())
-                {
-                    mc.tau_ff[sdk_idx] = command.motor.tau[cfg_idx];
-                }
+                continue; // Unknown joint, skip
+            }
+            int sdk_idx = it->second;
+
+            if (i < command.motor.q.size())
+            {
+                mc.q_target[sdk_idx] = command.motor.q[i];
+            }
+            if (i < command.motor.dq.size())
+            {
+                mc.dq_target[sdk_idx] = command.motor.dq[i];
+            }
+            if (i < command.motor.kp.size())
+            {
+                mc.kp[sdk_idx] = command.motor.kp[i];
+            }
+            if (i < command.motor.kd.size())
+            {
+                mc.kd[sdk_idx] = command.motor.kd[i];
+            }
+            if (i < command.motor.tau.size())
+            {
+                mc.tau_ff[sdk_idx] = command.motor.tau[i];
             }
         }
 
