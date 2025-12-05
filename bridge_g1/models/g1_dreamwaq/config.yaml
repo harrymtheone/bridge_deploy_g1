@@ -64,7 +64,7 @@ algorithm:
   # Model file: exported from training with trace_dreamwaq.py
   # Input: proprio (1, 56), prop_his (1, 100, 56)
   # Output: actions (1, 15), recon (1, 32, 16)
-  model_name: "g1_dream_006_1800.onnx"  # TODO: Replace with actual model file
+  model_name: "g1_dream_010_14500.onnx"  # TODO: Replace with actual model file
   dt: 0.004           # Base timestep (matches training env dt)
   decimation: 5       # Policy runs at dt * decimation = 0.02s (50Hz)
   
@@ -279,7 +279,7 @@ control:
 
 safety:
   max_lean_angle_deg: 30.0  # Maximum lean angle before stopping RL (degrees)
-  torque_limit_scale: 1.0   # Global scale factor for torque limits
+  torque_limit_scale: 1.2   # Global scale factor for torque limits
 
   # Torque limits per joint (Nm) - based on G1 motor specifications
   torque_limit:
