@@ -10,7 +10,17 @@ install(DIRECTORY mjcf/
 
 # Install meshes
 install(DIRECTORY meshes/
-    DESTINATION share/${PROJECT_NAME}/mjcf/meshes
+    DESTINATION share/${PROJECT_NAME}/meshes
+)
+
+# Install xacro files
+install(DIRECTORY xacro/
+    DESTINATION share/${PROJECT_NAME}/xacro
+)
+
+# Install URDF files
+install(DIRECTORY urdf/
+    DESTINATION share/${PROJECT_NAME}/urdf
 )
 
 ament_package()

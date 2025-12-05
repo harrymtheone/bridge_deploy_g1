@@ -8,6 +8,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 
 #include <bridge_core/core/types.hpp>
 #include <bridge_core/core/config_manager.hpp>
@@ -256,6 +257,9 @@ public:
         lowstate_subscriber_->InitChannel(
             std::bind(&G1RealInterface::LowStateHandler, this, std::placeholders::_1), 1);
 
+        // Create ROS joint state publisher for RViz visualization
+        joint_state_pub_ = node_->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+
         // Initialize Motion Switcher to release high-level control
         msc_ = std::make_shared<unitree::robot::b2::MotionSwitcherClient>();
         msc_->SetTimeout(5.0f);
@@ -342,6 +346,9 @@ public:
                     state.motor.tau_est[cfg_idx] = ms_ptr->tau_est[sdk_idx];
                 }
             }
+
+            // Publish joint states for RViz visualization
+            publishJointStates(*ms_ptr);
         }
 
         if (imu_ptr)
@@ -357,6 +364,10 @@ public:
 
     void sendCommand(const RobotCommand &command) override
     {
+        // [DEBUG] Command sending disabled for debugging
+        // Uncomment the code below to enable actual robot control
+        (void)command; // Suppress unused parameter warning
+        /*
         UnitreeMotorCommand mc;
 
         // Convert bridge_core::RobotCommand to internal UnitreeMotorCommand
@@ -394,6 +405,7 @@ public:
         }
 
         motor_command_buffer_.SetData(mc);
+        */
     }
 
     bool isReady() const override
@@ -421,6 +433,9 @@ private:
     ChannelSubscriberPtr<LowState_> lowstate_subscriber_;
     ThreadPtr command_writer_ptr_;
     std::shared_ptr<unitree::robot::b2::MotionSwitcherClient> msc_;
+
+    // ROS publisher for joint states (RViz visualization)
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
 
     DataBuffer<UnitreeMotorState> motor_state_buffer_;
     DataBuffer<UnitreeMotorCommand> motor_command_buffer_;
@@ -488,6 +503,37 @@ private:
             dds_low_command.crc() = Crc32Core((uint32_t *)&dds_low_command, (sizeof(dds_low_command) >> 2) - 1);
             lowcmd_publisher_->Write(dds_low_command);
         }
+    }
+
+    void publishJointStates(const UnitreeMotorState &ms)
+    {
+        // Joint names matching the URDF/xacro (in SDK order)
+        static const std::vector<std::string> urdf_joint_names = {
+            "leg_l1_joint", "leg_l2_joint", "leg_l3_joint", "leg_l4_joint", "leg_l5_joint", "leg_l6_joint",
+            "leg_r1_joint", "leg_r2_joint", "leg_r3_joint", "leg_r4_joint", "leg_r5_joint", "leg_r6_joint",
+            "waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint",
+            "arm_l1_joint", "arm_l2_joint", "arm_l3_joint", "arm_l4_joint",
+            "arm_l5_joint", "arm_l6_joint", "arm_l7_joint",
+            "arm_r1_joint", "arm_r2_joint", "arm_r3_joint", "arm_r4_joint",
+            "arm_r5_joint", "arm_r6_joint", "arm_r7_joint"
+        };
+
+        sensor_msgs::msg::JointState joint_state_msg;
+        joint_state_msg.header.stamp = node_->now();
+        joint_state_msg.name = urdf_joint_names;
+        
+        joint_state_msg.position.resize(G1_NUM_MOTOR);
+        joint_state_msg.velocity.resize(G1_NUM_MOTOR);
+        joint_state_msg.effort.resize(G1_NUM_MOTOR);
+
+        for (int i = 0; i < G1_NUM_MOTOR; ++i)
+        {
+            joint_state_msg.position[i] = ms.q[i];
+            joint_state_msg.velocity[i] = ms.dq[i];
+            joint_state_msg.effort[i] = ms.tau_est[i];
+        }
+
+        joint_state_pub_->publish(joint_state_msg);
     }
 };
 
