@@ -106,7 +106,7 @@ def generate_launch_description():
         rviz_arg,
         robot_state_publisher_node,
         joy_node,
-        rviz_node,
+        # rviz_node,
         g1_real_node,
     ])
 

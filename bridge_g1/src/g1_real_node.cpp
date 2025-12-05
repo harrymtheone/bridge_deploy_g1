@@ -372,10 +372,6 @@ public:
 
     void sendCommand(const RobotCommand &command) override
     {
-        // [DEBUG] Command sending disabled for debugging
-        // Uncomment the code below to enable actual robot control
-        (void)command; // Suppress unused parameter warning
-        /*
         UnitreeMotorCommand mc;
 
         // Convert bridge_core::RobotCommand to internal UnitreeMotorCommand
@@ -413,7 +409,6 @@ public:
         }
 
         motor_command_buffer_.SetData(mc);
-        */
     }
 
     bool isReady() const override

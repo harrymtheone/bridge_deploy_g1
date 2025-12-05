@@ -92,8 +92,8 @@ algorithm:
 
 control:
   # Transition times
-  stand_up_time: 2.5
-  sit_down_time: 2.5
+  stand_up_time: 5.5
+  sit_down_time: 5.5
 
   # RL gains for all joints (29 DOFs) - used in RL_RUNNING mode
   rl_kp:
