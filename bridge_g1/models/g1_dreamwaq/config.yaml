@@ -276,3 +276,44 @@ control:
     arm_r5_joint: 0.0
     arm_r6_joint: 0.0
     arm_r7_joint: 0.0
+
+safety:
+  max_lean_angle_deg: 30.0  # Maximum lean angle before stopping RL (degrees)
+  torque_limit_scale: 1.0   # Global scale factor for torque limits
+
+  # Torque limits per joint (Nm) - based on G1 motor specifications
+  torque_limit:
+    # Left leg
+    leg_l1_joint: 88.0    # hip_pitch
+    leg_l2_joint: 139.0   # hip_roll
+    leg_l3_joint: 88.0    # hip_yaw
+    leg_l4_joint: 139.0   # knee
+    leg_l5_joint: 50.0    # ankle_pitch
+    leg_l6_joint: 50.0    # ankle_roll
+    # Right leg
+    leg_r1_joint: 88.0
+    leg_r2_joint: 139.0
+    leg_r3_joint: 88.0
+    leg_r4_joint: 139.0
+    leg_r5_joint: 50.0
+    leg_r6_joint: 50.0
+    # Waist
+    waist_yaw_joint: 88.0
+    waist_roll_joint: 50.0
+    waist_pitch_joint: 50.0
+    # Left arm
+    arm_l1_joint: 25.0    # shoulder_pitch
+    arm_l2_joint: 25.0    # shoulder_roll
+    arm_l3_joint: 25.0    # shoulder_yaw
+    arm_l4_joint: 25.0    # elbow
+    arm_l5_joint: 25.0    # wrist_roll
+    arm_l6_joint: 5.0     # wrist_pitch
+    arm_l7_joint: 5.0     # wrist_yaw
+    # Right arm
+    arm_r1_joint: 25.0
+    arm_r2_joint: 25.0
+    arm_r3_joint: 25.0
+    arm_r4_joint: 25.0
+    arm_r5_joint: 25.0
+    arm_r6_joint: 5.0
+    arm_r7_joint: 5.0
