@@ -303,6 +303,10 @@ control:
   # Transition times
   stand_up_time: 3
   sit_down_time: 3
+  
+  # Visualization
+  publish_tf: true
+  publish_joint_states: true
 
 safety:
   max_lean_angle_deg: 30.0  # Maximum lean angle before stopping RL (degrees)

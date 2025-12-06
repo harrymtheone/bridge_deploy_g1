@@ -8,9 +8,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
-#include <sensor_msgs/msg/joint_state.hpp>
-#include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include <bridge_core/core/types.hpp>
 #include <bridge_core/core/config_manager.hpp>
@@ -259,30 +256,13 @@ public:
         lowstate_subscriber_->InitChannel(
             std::bind(&G1RealInterface::LowStateHandler, this, std::placeholders::_1), 1);
 
-        // Create ROS joint state publisher for RViz visualization
-        joint_state_pub_ = node_->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
-
-        // Create TF broadcaster for base_link orientation
-        tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
-
-        // Create visualization publisher timer (50Hz for RViz)
-        viz_timer_ = node_->create_wall_timer(
-            std::chrono::milliseconds(20),
-            std::bind(&G1RealInterface::vizPublisherCallback, this));
-
         // Initialize Motion Switcher to release high-level control
         msc_ = std::make_shared<unitree::robot::b2::MotionSwitcherClient>();
         msc_->SetTimeout(5.0f);
         msc_->Init();
     }
 
-    ~G1RealInterface() override
-    {
-        // Cancel visualization timer
-        if (viz_timer_) {
-            viz_timer_->cancel();
-        }
-    }
+    ~G1RealInterface() override = default;
 
     void initialize(const RobotConfig &config) override
     {
@@ -438,15 +418,6 @@ private:
     ThreadPtr command_writer_ptr_;
     std::shared_ptr<unitree::robot::b2::MotionSwitcherClient> msc_;
 
-    // ROS publisher for joint states (RViz visualization)
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
-
-    // TF broadcaster for base_link orientation
-    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-
-    // Visualization publisher timer (50Hz for RViz)
-    rclcpp::TimerBase::SharedPtr viz_timer_;
-
     DataBuffer<UnitreeMotorState> motor_state_buffer_;
     DataBuffer<UnitreeMotorCommand> motor_command_buffer_;
     DataBuffer<UnitreeImuState> imu_state_buffer_;
@@ -515,76 +486,6 @@ private:
         }
     }
 
-    void publishJointStates(const UnitreeMotorState &ms)
-    {
-        // Joint names matching the URDF/xacro (in SDK order)
-        static const std::vector<std::string> urdf_joint_names = {
-            "leg_l1_joint", "leg_l2_joint", "leg_l3_joint", "leg_l4_joint", "leg_l5_joint", "leg_l6_joint",
-            "leg_r1_joint", "leg_r2_joint", "leg_r3_joint", "leg_r4_joint", "leg_r5_joint", "leg_r6_joint",
-            "waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint",
-            "arm_l1_joint", "arm_l2_joint", "arm_l3_joint", "arm_l4_joint",
-            "arm_l5_joint", "arm_l6_joint", "arm_l7_joint",
-            "arm_r1_joint", "arm_r2_joint", "arm_r3_joint", "arm_r4_joint",
-            "arm_r5_joint", "arm_r6_joint", "arm_r7_joint"
-        };
-
-        sensor_msgs::msg::JointState joint_state_msg;
-        joint_state_msg.header.stamp = node_->now();
-        joint_state_msg.name = urdf_joint_names;
-        
-        joint_state_msg.position.resize(G1_NUM_MOTOR);
-        joint_state_msg.velocity.resize(G1_NUM_MOTOR);
-        joint_state_msg.effort.resize(G1_NUM_MOTOR);
-
-        for (int i = 0; i < G1_NUM_MOTOR; ++i)
-        {
-            joint_state_msg.position[i] = ms.q[i];
-            joint_state_msg.velocity[i] = ms.dq[i];
-            joint_state_msg.effort[i] = ms.tau_est[i];
-        }
-
-        joint_state_pub_->publish(joint_state_msg);
-    }
-
-    void publishBaseLinkTF(const UnitreeImuState &imu)
-    {
-        geometry_msgs::msg::TransformStamped transform;
-        transform.header.stamp = node_->now();
-        transform.header.frame_id = "world";
-        transform.child_frame_id = "base_link";
-
-        // No translation (rotation only)
-        transform.transform.translation.x = 0.0;
-        transform.transform.translation.y = 0.0;
-        transform.transform.translation.z = 0.0;
-
-        // IMU quaternion: [w, x, y, z]
-        transform.transform.rotation.w = imu.quat[0];
-        transform.transform.rotation.x = imu.quat[1];
-        transform.transform.rotation.y = imu.quat[2];
-        transform.transform.rotation.z = imu.quat[3];
-
-        tf_broadcaster_->sendTransform(transform);
-    }
-
-    void vizPublisherCallback()
-    {
-        // Get latest data from buffers
-        auto ms_ptr = motor_state_buffer_.GetData();
-        auto imu_ptr = imu_state_buffer_.GetData();
-        
-        // Publish joint states
-        if (ms_ptr)
-        {
-            publishJointStates(*ms_ptr);
-        }
-        
-        // Publish TF
-        if (imu_ptr)
-        {
-            publishBaseLinkTF(*imu_ptr);
-        }
-    }
 };
 
 // -----------------------------------------------------------------------------

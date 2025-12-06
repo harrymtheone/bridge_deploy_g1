@@ -2,15 +2,16 @@
 Launch file for Unitree G1 robot in MuJoCo simulation
 
 This launch file starts:
-1. mujoco_ros - MuJoCo simulator with G1 model
-2. bridge_g1 - RL controller for G1 robot  
-3. robot_state_publisher - For RViz visualization
-4. (Optional) RViz for visualization
+1. robot_state_publisher - Publishes robot model and TF transforms from joint states
+2. mujoco_ros - MuJoCo simulator with G1 model
+3. bridge_g1 - RL controller for G1 robot  
+4. joy_node - Joystick for velocity commands
+5. RViz for visualization
 """
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -19,8 +20,8 @@ def generate_launch_description():
     # Declare launch arguments
     model_name_arg = DeclareLaunchArgument(
         'model_name',
-        # default_value='g1_baseline',
-        default_value='g1_dreamwaq',
+        default_value='g1_baseline',
+        # default_value='g1_dreamwaq',
         description='Name of the model directory (contains config.yaml and model.onnx)'
     )
     
@@ -62,6 +63,27 @@ def generate_launch_description():
         g1_description_share, 'mjcf', LaunchConfiguration('mjcf_model')
     ])
     
+    # Load robot description from xacro
+    robot_description_content = Command([
+        'xacro ',
+        PathJoinSubstitution([
+            g1_description_share,
+            'xacro',
+            'unitree_G1.xacro'
+        ])
+    ])
+    
+    robot_description = {'robot_description': robot_description_content}
+    
+    # Robot State Publisher - publishes TF transforms from joint states
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        output='screen',
+        parameters=[robot_description]
+    )
+    
     # MuJoCo simulation node (runs physics and publishes to ROS)
     mujoco_node = Node(
         package='mujoco_rospy',
@@ -88,11 +110,18 @@ def generate_launch_description():
     )
     
     # RViz
+    rviz_config = PathJoinSubstitution([
+        FindPackageShare('bridge_g1'),
+        'rviz',
+        'g1.rviz'
+    ])
+    
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        output='screen'
+        output='screen',
+        arguments=['-d', rviz_config]
     )
     
     # Joystick node for control input
@@ -114,6 +143,7 @@ def generate_launch_description():
         publish_rate_arg,
         headless_arg,
         render_rate_arg,
+        robot_state_publisher_node,
         mujoco_node,
         joy_node,
         rviz_node,

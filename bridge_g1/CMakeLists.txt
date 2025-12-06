@@ -84,5 +84,10 @@ install(DIRECTORY models
     DESTINATION share/${PROJECT_NAME}
 )
 
+# Install rviz config files
+install(DIRECTORY rviz
+    DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()
 

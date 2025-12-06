@@ -90,12 +90,19 @@ def generate_launch_description():
         }]
     )
 
-    # RViz (optional)
+    # RViz
+    rviz_config = PathJoinSubstitution([
+        FindPackageShare('bridge_g1'),
+        'rviz',
+        'g1.rviz'
+    ])
+    
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         output='screen',
+        arguments=['-d', rviz_config],
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
 

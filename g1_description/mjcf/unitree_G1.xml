@@ -130,7 +130,9 @@
     <worldbody>
         <body name="pelvis" pos="0 0 0.793" childclass="g1">
             <inertial pos="0 0 -0.07605" quat="1 0 -0.000399148 0" mass="3.813" diaginertia="0.010549 0.0093089 0.0079184"/>
+
             <freejoint name="floating_base_joint"/>
+
             <geom class="visual" material="black" mesh="pelvis"/>
             <geom class="visual" mesh="pelvis_contour_link"/>
             <geom mesh="pelvis_contour_link" class="visual"/>
@@ -241,8 +243,6 @@
                     <joint name="waist_roll_joint" class="waist_roll"/>
                     <geom class="visual" mesh="waist_roll_link"/>
                     <body name="torso_link">
-                        <site name="imu_site" pos="0 0 0" size="0.01"/>
-
                         <inertial pos="0.00203158 0.000339683 0.184568" quat="0.999803 -6.03319e-05 0.0198256 0.00131986"
                                   mass="7.818" diaginertia="0.121847 0.109825 0.0273735"/>
                         <joint name="waist_pitch_joint" class="waist_pitch"/>
@@ -256,6 +256,7 @@
                         <geom name="head_collision" class="collision" type="capsule" size="0.068" fromto="0.01 0 .41 0.01 0 .42"/>
 
                         <site name="imu_in_torso" size="0.01" pos="-0.03959 -0.00224 0.14792"/>
+                        <site name="imu_site" size="0.01" pos="-0.03959 -0.00224 0.14792"/>
                         <site name="mid360" size="0.01" pos="0.0002835 0.00003 0.41618" quat="0.00000094 -0.99979404 0.00004632 0.02029493"/>
                         <body name="left_shoulder_pitch_link" pos="0.0039563 0.10022 0.24778"
                               quat="0.990264 0.139201 1.38722e-05 -9.86868e-05">
@@ -550,9 +551,12 @@
         <jointvel name="arm_r7_joint_vel" joint="arm_r7_joint"/>
 
         <!-- IMU sensors on pelvis -->
-        <framequat name="imu_quat" objtype="site" objname="imu_site"/>
-        <gyro name="imu_gyro" site="imu_site"/>
-        <accelerometer name="imu_accel" site="imu_site"/>
+        <!-- <framequat name="imu_quat" objtype="site" objname="imu_in_torso"/>
+        <gyro name="imu_gyro" site="imu_in_torso"/>
+        <accelerometer name="imu_accel" site="imu_in_torso"/> -->
+        <framequat name="imu_quat" objtype="site" objname="imu_in_pelvis"/>
+        <gyro name="imu_gyro" site="imu_in_pelvis"/>
+        <accelerometer name="imu_accel" site="imu_in_pelvis"/>
 
         <!-- Mid360 LiDAR pose -->
         <framequat name="mid360_quat" objtype="site" objname="mid360"/>
