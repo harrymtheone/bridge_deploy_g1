@@ -10,7 +10,6 @@ This launch file starts:
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -20,6 +19,7 @@ def generate_launch_description():
     # Declare launch arguments
     model_name_arg = DeclareLaunchArgument(
         'model_name',
+        # default_value='g1_baseline',
         default_value='g1_dreamwaq',
         description='Name of the model directory (contains config.yaml and model.onnx)'
     )
@@ -40,12 +40,6 @@ def generate_launch_description():
         'publish_rate',
         default_value='500.0',
         description='Publish rate for sensor data in Hz'
-    )
-    
-    rviz_arg = DeclareLaunchArgument(
-        'rviz',
-        default_value='false',
-        description='Launch RViz for visualization'
     )
     
     headless_arg = DeclareLaunchArgument(
@@ -93,13 +87,12 @@ def generate_launch_description():
         }]
     )
     
-    # RViz (optional)
+    # RViz
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        output='screen',
-        condition=IfCondition(LaunchConfiguration('rviz'))
+        output='screen'
     )
     
     # Joystick node for control input
@@ -119,7 +112,6 @@ def generate_launch_description():
         mjcf_model_arg,
         sim_rate_arg,
         publish_rate_arg,
-        rviz_arg,
         headless_arg,
         render_rate_arg,
         mujoco_node,
