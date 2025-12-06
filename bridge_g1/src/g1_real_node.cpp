@@ -31,12 +31,14 @@
 #include <unitree/robot/channel/channel_subscriber.hpp>
 #include <unitree/idl/hg/LowCmd_.hpp>
 #include <unitree/idl/hg/LowState_.hpp>
+#include <unitree/idl/hg/IMUState_.hpp>
 #include <unitree/robot/b2/motion_switcher/motion_switcher_client.hpp>
 #include <unitree/common/thread/thread.hpp>
 
 // Topic names
 static const std::string HG_CMD_TOPIC = "rt/lowcmd";
 static const std::string HG_STATE_TOPIC = "rt/lowstate";
+static const std::string HG_IMU_TORSO_TOPIC = "rt/secondary_imu";
 
 using namespace unitree::common;
 using namespace unitree::robot;
@@ -243,7 +245,7 @@ class G1RealInterface : public RobotInterface
 public:
     G1RealInterface(rclcpp::Node::SharedPtr node, const std::string &network_interface)
         : node_(node), network_interface_(network_interface),
-          is_ready_(false), mode_machine_(0)
+          is_ready_(false), mode_machine_(0), imu_source_(1)
     {
         // Initialize Unitree Channel
         ChannelFactory::Instance()->Init(0, network_interface_);
@@ -292,6 +294,21 @@ public:
         }
 
         RCLCPP_INFO(node_->get_logger(), "Built joint mapping for %zu joints", config_.joint_names.size());
+
+        // Read IMU source from config: 0 = torso, 1 = pelvis (default)
+        if (config.yaml && config.yaml["imu_source"]) {
+            imu_source_ = config.yaml["imu_source"].as<int>();
+        }
+        
+        if (imu_source_ == 0) {
+            // Subscribe to torso IMU (secondary IMU)
+            RCLCPP_INFO(node_->get_logger(), "Using Torso IMU (rt/secondary_imu)");
+            imutorso_subscriber_ = std::make_shared<ChannelSubscriber<IMUState_>>(HG_IMU_TORSO_TOPIC);
+            imutorso_subscriber_->InitChannel(
+                std::bind(&G1RealInterface::TorsoImuHandler, this, std::placeholders::_1), 1);
+        } else {
+            RCLCPP_INFO(node_->get_logger(), "Using Pelvis IMU (from LowState)");
+        }
 
         // Try to switch to release mode
         RCLCPP_INFO(node_->get_logger(), "Checking motion switcher...");
@@ -407,6 +424,7 @@ private:
     std::string network_interface_;
     bool is_ready_;
     uint8_t mode_machine_;
+    int imu_source_;  // 0 = torso, 1 = pelvis
 
     // Configuration and joint mapping
     RobotConfig config_;
@@ -415,6 +433,7 @@ private:
 
     ChannelPublisherPtr<LowCmd_> lowcmd_publisher_;
     ChannelSubscriberPtr<LowState_> lowstate_subscriber_;
+    ChannelSubscriberPtr<IMUState_> imutorso_subscriber_;  // Torso IMU (secondary)
     ThreadPtr command_writer_ptr_;
     std::shared_ptr<unitree::robot::b2::MotionSwitcherClient> msc_;
 
@@ -443,15 +462,30 @@ private:
         }
         motor_state_buffer_.SetData(ms);
 
-        // Parse IMU State
-        UnitreeImuState imu;
-        imu.quat = low_state.imu_state().quaternion();
-        imu.omega = low_state.imu_state().gyroscope();
-        imu.acc = low_state.imu_state().accelerometer();
-        imu.rpy = low_state.imu_state().rpy();
-        imu_state_buffer_.SetData(imu);
+        // Parse IMU State from pelvis (only if using pelvis IMU)
+        if (imu_source_ == 1)
+        {
+            UnitreeImuState imu;
+            imu.quat = low_state.imu_state().quaternion();
+            imu.omega = low_state.imu_state().gyroscope();
+            imu.acc = low_state.imu_state().accelerometer();
+            imu.rpy = low_state.imu_state().rpy();
+            imu_state_buffer_.SetData(imu);
+        }
 
         mode_machine_ = low_state.mode_machine();
+    }
+
+    void TorsoImuHandler(const void *message)
+    {
+        // Parse IMU State from torso (secondary IMU)
+        IMUState_ imu_torso = *(const IMUState_ *)message;
+        UnitreeImuState imu;
+        imu.quat = imu_torso.quaternion();
+        imu.omega = imu_torso.gyroscope();
+        imu.acc = imu_torso.accelerometer();
+        imu.rpy = imu_torso.rpy();
+        imu_state_buffer_.SetData(imu);
     }
 
     void LowCommandWriter()

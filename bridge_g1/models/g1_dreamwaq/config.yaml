@@ -3,6 +3,7 @@
 robot:
   type: "G1"
   num_dof: 29
+  imu_source: 0  # 0 = torso IMU (rt/secondary_imu), 1 = pelvis IMU (from LowState)
 
   joints:
     # Left Leg (6)
