@@ -9,13 +9,11 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
-#include <bridge_core/core/types.hpp>
+#include <bridge_core/utils/types.hpp>
 #include <bridge_core/core/config_manager.hpp>
 #include <bridge_core/core/rl_controller.hpp>
+#include <bridge_core/core/algorithm_factory.hpp>
 #include <bridge_core/interfaces/robot_interface.hpp>
-#include <bridge_core/algorithms/baseline.hpp>
-#include <bridge_core/algorithms/mod.hpp>
-#include <bridge_core/algorithms/dreamwaq.hpp>
 
 #include <cmath>
 #include <memory>
@@ -555,21 +553,9 @@ int main(int argc, char **argv)
         auto robot_interface = std::make_shared<G1RealInterface>(node, network_interface);
         robot_interface->initialize(config.robot);
 
-        // Create Algorithm
-        std::shared_ptr<AlgorithmInterface> algorithm;
-        if (config.algorithm.name == "Baseline")
-        {
-            algorithm = std::make_shared<Baseline>();
-        }
-        else if (config.algorithm.name == "DreamWAQ")
-        {
-            algorithm = std::make_shared<DreamWAQ>();
-        }
-        else if (config.algorithm.name == "Mod")
-        {
-            algorithm = std::make_shared<Mod>();
-        }
-        else
+        // Create Algorithm using factory
+        auto algorithm = AlgorithmFactory::create(config.algorithm.name, node->get_logger());
+        if (!algorithm)
         {
             throw std::runtime_error("Unknown algorithm: " + config.algorithm.name);
         }

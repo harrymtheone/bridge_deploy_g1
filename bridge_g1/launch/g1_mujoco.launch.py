@@ -20,8 +20,9 @@ def generate_launch_description():
     # Declare launch arguments
     model_name_arg = DeclareLaunchArgument(
         'model_name',
-        default_value='g1_baseline',
+        # default_value='g1_baseline',
         # default_value='g1_dreamwaq',
+        default_value='g1_pie',
         description='Name of the model directory (contains config.yaml and model.onnx)'
     )
     
@@ -81,7 +82,8 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[robot_description]
+        parameters=[robot_description],
+        arguments=['--ros-args', '--log-level', 'WARN']
     )
     
     # MuJoCo simulation node (runs physics and publishes to ROS)

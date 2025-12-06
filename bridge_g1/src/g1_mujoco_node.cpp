@@ -10,18 +10,17 @@
  *   - Baseline: LSTM-based recurrent policy
  *   - Mod: GRU-based recurrent policy
  *   - DreamWAQ: Proprioceptive history-based estimator + actor
+ *   - PIE: Depth image + proprioceptive history for parkour locomotion
  */
 
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
-#include <bridge_core/core/types.hpp>
+#include <bridge_core/utils/types.hpp>
 #include <bridge_core/core/config_manager.hpp>
 #include <bridge_core/core/rl_controller.hpp>
+#include <bridge_core/core/algorithm_factory.hpp>
 #include <bridge_core/interfaces/mujoco_interface.hpp>
-#include <bridge_core/algorithms/baseline.hpp>
-#include <bridge_core/algorithms/mod.hpp>
-#include <bridge_core/algorithms/dreamwaq.hpp>
 
 #include <memory>
 
@@ -56,26 +55,10 @@ int main(int argc, char **argv)
         auto robot_interface = std::make_shared<MujocoSimInterface>(node);
         robot_interface->initialize(config.robot);
 
-        // Create algorithm based on config
-        std::shared_ptr<AlgorithmInterface> algorithm;
-        if (config.algorithm.name == "Baseline")
+        // Create algorithm using factory
+        auto algorithm = AlgorithmFactory::create(config.algorithm.name, node->get_logger());
+        if (!algorithm)
         {
-            algorithm = std::make_shared<Baseline>();
-            RCLCPP_INFO(node->get_logger(), "Using Baseline algorithm");
-        }
-        else if (config.algorithm.name == "DreamWAQ")
-        {
-            algorithm = std::make_shared<DreamWAQ>();
-            RCLCPP_INFO(node->get_logger(), "Using DreamWAQ algorithm");
-        }
-        else if (config.algorithm.name == "Mod")
-        {
-            algorithm = std::make_shared<Mod>();
-            RCLCPP_INFO(node->get_logger(), "Using Mod algorithm");
-        }
-        else
-        {
-            RCLCPP_ERROR(node->get_logger(), "Unknown algorithm: %s", config.algorithm.name.c_str());
             throw std::runtime_error("Unknown algorithm: " + config.algorithm.name);
         }
         algorithm->initialize(node, config.algorithm, config.robot, config.control);

@@ -311,4 +311,4 @@ control:
 
 safety:
   max_lean_angle_deg: 30.0  # Maximum lean angle before stopping RL (degrees)
-  torque_limit_scale: 10.5   # Global scale factor for torque limits
+  torque_limit_scale: 1.2   # Global scale factor for torque limits

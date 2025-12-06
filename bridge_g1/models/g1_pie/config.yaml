@@ -273,10 +273,10 @@ robot:
       torque_limit: 5.0
 
 algorithm:
-  name: "DreamWAQ"
-  model_name: "g1_dream_010_19900.onnx"
-  dt: 0.002
-  decimation: 10
+  name: "PIE"
+  model_name: "g1_pie_001_39700.onnx"
+  dt: 0.005
+  decimation: 4
 
   # Scaling factors (match training config)
   action_scale: 0.5

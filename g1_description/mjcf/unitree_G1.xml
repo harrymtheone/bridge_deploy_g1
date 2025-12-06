@@ -551,12 +551,12 @@
         <jointvel name="arm_r7_joint_vel" joint="arm_r7_joint"/>
 
         <!-- IMU sensors on pelvis -->
-        <!-- <framequat name="imu_quat" objtype="site" objname="imu_in_torso"/>
+        <framequat name="imu_quat" objtype="site" objname="imu_in_torso"/>
         <gyro name="imu_gyro" site="imu_in_torso"/>
-        <accelerometer name="imu_accel" site="imu_in_torso"/> -->
-        <framequat name="imu_quat" objtype="site" objname="imu_in_pelvis"/>
+        <accelerometer name="imu_accel" site="imu_in_torso"/>
+        <!-- <framequat name="imu_quat" objtype="site" objname="imu_in_pelvis"/>
         <gyro name="imu_gyro" site="imu_in_pelvis"/>
-        <accelerometer name="imu_accel" site="imu_in_pelvis"/>
+        <accelerometer name="imu_accel" site="imu_in_pelvis"/> -->
 
         <!-- Mid360 LiDAR pose -->
         <framequat name="mid360_quat" objtype="site" objname="mid360"/>
