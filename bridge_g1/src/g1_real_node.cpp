@@ -16,6 +16,7 @@
 #include <bridge_core/core/config_manager.hpp>
 #include <bridge_core/core/rl_controller.hpp>
 #include <bridge_core/interfaces/robot_interface.hpp>
+#include <bridge_core/algorithms/baseline.hpp>
 #include <bridge_core/algorithms/mod.hpp>
 #include <bridge_core/algorithms/dreamwaq.hpp>
 
@@ -621,7 +622,11 @@ int main(int argc, char **argv)
 
         // Create Algorithm
         std::shared_ptr<AlgorithmInterface> algorithm;
-        if (config.algorithm.name == "DreamWAQ")
+        if (config.algorithm.name == "Baseline")
+        {
+            algorithm = std::make_shared<Baseline>();
+        }
+        else if (config.algorithm.name == "DreamWAQ")
         {
             algorithm = std::make_shared<DreamWAQ>();
         }

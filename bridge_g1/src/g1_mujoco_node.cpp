@@ -7,6 +7,7 @@
  * control commands back.
  *
  * Supported algorithms:
+ *   - Baseline: LSTM-based recurrent policy
  *   - Mod: GRU-based recurrent policy
  *   - DreamWAQ: Proprioceptive history-based estimator + actor
  */
@@ -18,6 +19,7 @@
 #include <bridge_core/core/config_manager.hpp>
 #include <bridge_core/core/rl_controller.hpp>
 #include <bridge_core/interfaces/mujoco_interface.hpp>
+#include <bridge_core/algorithms/baseline.hpp>
 #include <bridge_core/algorithms/mod.hpp>
 #include <bridge_core/algorithms/dreamwaq.hpp>
 
@@ -56,7 +58,12 @@ int main(int argc, char **argv)
 
         // Create algorithm based on config
         std::shared_ptr<AlgorithmInterface> algorithm;
-        if (config.algorithm.name == "DreamWAQ")
+        if (config.algorithm.name == "Baseline")
+        {
+            algorithm = std::make_shared<Baseline>();
+            RCLCPP_INFO(node->get_logger(), "Using Baseline algorithm");
+        }
+        else if (config.algorithm.name == "DreamWAQ")
         {
             algorithm = std::make_shared<DreamWAQ>();
             RCLCPP_INFO(node->get_logger(), "Using DreamWAQ algorithm");
@@ -84,7 +91,7 @@ int main(int argc, char **argv)
         RCLCPP_INFO(node->get_logger(), "  Robot: %s", config.robot.robot_name.c_str());
         RCLCPP_INFO(node->get_logger(), "  Algorithm: %s", config.algorithm.name.c_str());
         RCLCPP_INFO(node->get_logger(), "  DOFs: %d (active: %zu)",
-                    config.robot.num_dof, config.robot.dof_activated.size());
+                    config.robot.num_dof, config.robot.dof_activated_ids.size());
 
         rclcpp::spin(node);
 
